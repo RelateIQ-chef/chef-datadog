@@ -38,7 +38,6 @@ else
   # Install the regular package
   package 'datadog-agent' do
     version dd_agent_version
-    action :upgrade
   end
 end
 
