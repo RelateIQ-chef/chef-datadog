@@ -13,7 +13,16 @@ datadog_monitor 'mongo' do
   instances node['datadog']['mongo']['instances']
 end
 
-cookbook_file "/usr/share/datadog/agent/checks.d/mongo.py" do
+dd_checks_dir = '/usr/share/datadog/agent/checks.d'
+directory dd_checks_dir do
+    owner 'root'
+    group 'root'
+    mode '0755'
+    action :create
+    recursive true
+end
+
+cookbook_file "#{dd_checks_dir}/mongo.py" do
 	source "mongo.py"
 	owner "root"
 	group "root"
