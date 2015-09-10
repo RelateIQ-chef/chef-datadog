@@ -13,7 +13,8 @@ datadog_monitor 'mongo' do
   instances node['datadog']['mongo']['instances']
 end
 
-dd_checks_dir = '/usr/share/datadog/agent/checks.d'
+# shouldn't this be inferrable?
+dd_checks_dir = '/opt/datadog-agent/agent/checks.d'
 directory dd_checks_dir do
     owner 'root'
     group 'root'
@@ -23,9 +24,10 @@ directory dd_checks_dir do
 end
 
 cookbook_file "#{dd_checks_dir}/mongo.py" do
-	source "mongo.py"
-	owner "root"
-	group "root"
-	mode 00644
-	action :create
+    source "mongo.py"
+    owner "root"
+    group "root"
+    mode 00644
+    action :create
+    notifies :restart, 'service[datadog-agent]'
 end

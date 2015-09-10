@@ -436,7 +436,7 @@ class MongoDb(AgentCheck):
                 ns_tags = tags + ["db:%s" % dbname, "collection:%s" % collname]
 
                 # iterate over DBTOP metrics 
-                for m in DBTOP:
+                for m in self.DBTOP:
                     # each metric is of the form: x.y.z with z optional
                     # and can be found at ns_metrics[x][y][z]
                     value = ns_metrics
