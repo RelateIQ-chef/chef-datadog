@@ -29,4 +29,5 @@ cookbook_file "#{dd_checks_dir}/mongo.py" do
 	group "root"
 	mode 00644
 	action :create
+    notifies :restart, 'service[datadog-agent]'
 end
