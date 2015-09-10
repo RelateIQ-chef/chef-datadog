@@ -1,78 +1,171 @@
-import re
-import types
+# stdlib
 import time
+import types
 
+# 3p
+import pymongo
+
+# project
 from checks import AgentCheck
 from util import get_hostname
 
-# When running with pymongo < 2.0
-# Not the full spec for mongo URIs -- just extract username and password
-# http://www.mongodb.org/display/DOCS/connections6
-mongo_uri_re=re.compile(r'mongodb://(?P<username>[^:@]+):(?P<password>[^:@]+)@.*')
+DEFAULT_TIMEOUT = 30
 
-DEFAULT_TIMEOUT = 10
 
 class MongoDb(AgentCheck):
+    SERVICE_CHECK_NAME = 'mongodb.can_connect'
+    SOURCE_TYPE_NAME = 'mongodb'
 
     GAUGES = [
+        # L21-23,25,68-74 Deprecated as if V 3.0.0
         "indexCounters.btree.missRatio",
+        "indexCounters.missRatio",
         "globalLock.ratio",
+        "globalLock.totalTime",
+        "globalLock.lockTime",
+        "globalLock.currentQueue.total",
+        "globalLock.currentQueue.readers",
+        "globalLock.currentQueue.writers",
+        "globalLock.activeClients.total",
+        "globalLock.activeClients.readers",
+        "globalLock.activeClients.writers",
         "connections.current",
         "connections.available",
+        "connections.totalCreated",
+        "mem.bits",
         "mem.resident",
         "mem.virtual",
         "mem.mapped",
+        "mem.mappedWithJournal",
         "cursors.totalOpen",
         "cursors.timedOut",
         "uptime",
 
-        "stats.indexes",
-        "stats.indexSize",
+        "stats.collections",
         "stats.objects",
+        "stats.avgObjSize",
         "stats.dataSize",
         "stats.storageSize",
+        "stats.numExtents",
+        "stats.indexes",
+        "stats.indexSize",
+        "stats.fileSize",
+        "stats.nsSizeMB",
 
         "replSet.health",
         "replSet.state",
         "replSet.replicationLag",
+
         "metrics.repl.buffer.count",
         "metrics.repl.buffer.maxSizeBytes",
         "metrics.repl.buffer.sizeBytes",
 
-        "locks.local.timeLockedMicros.r",
-        "locks.local.timeLockedMicros.w",
+        #new mongo3 metrics
+        "locks.Collection.acquireCount.R",
+        "locks.Collection.acquireCount.W",
+        "locks.Collection.acquireWaitCount.R",
+        "locks.Collection.acquireWaitCount.W",
+        "locks.Collection.timeAcquiringMicros.R",
+        "locks.Collection.timeAcquiringMicros.W",
+        "locks.Database.acquireCount.r",
+        "locks.Database.acquireCount.w",
+        "locks.Database.acquireWaitCount.r",
+        "locks.Database.acquireWaitCount.w",
+        "locks.Database.timeAcquiringMicros.r",
+        "locks.Database.timeAcquiringMicros.w",
+        "locks.Global.acquireCount.r",
+        "locks.Global.acquireCount.w",
+        "locks.Global.acquireWaitCount.r",
+        "locks.Global.acquireWaitCount.w",
+        "locks.Global.timeAcquiringMicros.r",
+        "locks.Global.timeAcquiringMicros.w",
+        "locks.Metadata.acquireCount.R",
+        "locks.Metadata.acquireCount.W",
+        "locks.MMAPV1Journal.acquireCount.r",
+        "locks.MMAPV1Journal.acquireCount.w",
+        "locks.MMAPV1Journal.acquireWaitCount.r",
+        "locks.MMAPV1Journal.acquireWaitCount.w",
+        "locks.MMAPV1Journal.timeAcquiringMicros.r",
+        "locks.MMAPV1Journal.timeAcquiringMicros.w",
+        "locks.oplog.acquireCount.R",
+        "locks.oplog.acquireCount.w",
+        "locks.oplog.acquireWaitCount.R",
+        "locks.oplog.acquireWaitCount.w",
+        "locks.oplog.timeAcquiringMicros.R",
+        "locks.oplog.timeAcquiringMicros.w",
 
-        "locks.lucid_prod.timeLockedMicros.r",
-        "locks.lucid_prod.timeLockedMicros.w",
+        "backgroundFlushing.average_ms",
+        "backgroundFlushing.flushes",
+        "backgroundFlushing.last_ms",
+        "backgroundFlushing.total_ms",
 
-        "globalLock.currentQueue.readers",
-        "globalLock.currentQueue.writers",
+        "cursors.clientCursors_size",
+        "cursors.pinned",
+        "cursors.timedOut",
+        "cursors.totalNoTimeout",
+        "cursors.totalOpen",
 
-        "globalLock.activeClients.readers",
-        "globalLock.activeClients.writers",
+        "dur.commits",
+        "dur.commitsInWriteLock",
+        "dur.compression",
+        "dur.earlyCommits",
+        "dur.journaledMB",
+        "dur.timeMs.commits",
+        "dur.timeMs.commitsInWriteLock",
+        "dur.timeMs.dt",
+        "dur.timeMs.prepLogBuffer",
+        "dur.timeMs.remapPrivateView",
+        "dur.timeMs.writeToDataFiles",
+        "dur.timeMs.writeToJournal",
+        "dur.writeToDataFilesMB",
 
-        "globalLock.totalTime",
-        "globalLock.lockTime"
+        "metrics.commands.count.failed",
+        "metrics.commands.count.total",
+        "metrics.commands.createIndexes.failed",
+        "metrics.commands.createIndexes.total",
+        "metrics.commands.delete.failed",
+        "metrics.commands.delete.total",
+        "metrics.commands.eval.failed",
+        "metrics.commands.eval.total",
+        "metrics.commands.findAndModify.failed",
+        "metrics.commands.findAndModify.total",
+        "metrics.commands.insert.failed",
+        "metrics.commands.insert.total",
+        "metrics.commands.update.failed",
+        "metrics.commands.update.total",
+        "metrics.cursor.open.noTimeout",
+        "metrics.cursor.open.pinned",
+        "metrics.cursor.open.total",
+        "metrics.cursor.timedOut",
     ]
 
     RATES = [
         "indexCounters.btree.accesses",
         "indexCounters.btree.hits",
         "indexCounters.btree.misses",
-
+        "indexCounters.accesses",
+        "indexCounters.hits",
+        "indexCounters.misses",
+        "indexCounters.resets",
+        "extra_info.page_faults",
+        "extra_info.heap_usage_bytes",
         "opcounters.insert",
         "opcounters.query",
         "opcounters.update",
         "opcounters.delete",
         "opcounters.getmore",
         "opcounters.command",
-
+        "opcountersRepl.insert",
+        "opcountersRepl.query",
+        "opcountersRepl.update",
+        "opcountersRepl.delete",
+        "opcountersRepl.getmore",
+        "opcountersRepl.command",
         "asserts.regular",
         "asserts.warning",
         "asserts.msg",
         "asserts.user",
         "asserts.rollovers",
-
         "metrics.document.deleted",
         "metrics.document.inserted",
         "metrics.document.returned",
@@ -85,7 +178,6 @@ class MongoDb(AgentCheck):
         "metrics.operation.scanAndOrder",
         "metrics.queryExecutor.scanned",
         "metrics.record.moves",
-
         "metrics.repl.apply.batches.num",
         "metrics.repl.apply.batches.totalMillis",
         "metrics.repl.apply.ops",
@@ -94,59 +186,80 @@ class MongoDb(AgentCheck):
         "metrics.repl.network.getmores.totalMillis",
         "metrics.repl.network.ops",
         "metrics.repl.network.readersCreated",
+        "metrics.repl.preload.indexes.num"
+        "metrics.repl.preload.indexes.totalMillis"
         "metrics.repl.oplog.insert.num",
         "metrics.repl.oplog.insert.totalMillis",
         "metrics.repl.oplog.insertBytes",
-
         "metrics.ttl.deletedDocuments",
         "metrics.ttl.passes",
-
-        "recordStats.lucid_prod.pageFaultExceptionsThrown",
-        "recordStats.lucid_prod.accessesNotInMemory"
     ]
 
-    METRICS = set(GAUGES + RATES)
+    METRICS = GAUGES + RATES
 
-    def __init__(self, name, init_config, agentConfig):
-        AgentCheck.__init__(self, name, init_config, agentConfig)
+    DBTOP = [
+        "commands.count",
+        "commands.time",
+        "getmore.count",
+        "getmore.time",
+        "insert.count",
+        "insert.time",
+        "queries.count",
+        "queries.time",
+        "readLock.count",
+        "readLock.time",
+        "remove.count",
+        "remove.time",
+        "total.count",
+        "total.time",
+        "update.count",
+        "update.time",
+        "writeLock.count",
+        "writeLock.time",
+    ]
+
+    def __init__(self, name, init_config, agentConfig, instances=None):
+        AgentCheck.__init__(self, name, init_config, agentConfig, instances)
         self._last_state_by_server = {}
 
     def get_library_versions(self):
-        try:
-            import pymongo
-            version = pymongo.version
-        except ImportError:
-            version = "Not Found"
-        except AttributeError:
-            version = "Unknown"
+        return {"pymongo": pymongo.version}
 
-        return {"pymongo": version}
+    def check_last_state(self, state, clean_server_name, agentConfig):
+        if self._last_state_by_server.get(clean_server_name, -1) != state:
+            self._last_state_by_server[clean_server_name] = state
+            return self.create_event(state, clean_server_name, agentConfig)
 
-    def check_last_state(self, state, server, agentConfig):
-        if self._last_state_by_server.get(server, -1) != state:
-            self._last_state_by_server[server] = state
-            return self.create_event(state, server, agentConfig)
-
-    def create_event(self, state, server, agentConfig):
+    def create_event(self, state, clean_server_name, agentConfig):
         """Create an event with a message describing the replication
             state of a mongo node"""
 
         def get_state_description(state):
-            if state == 0: return 'Starting Up'
-            elif state == 1: return 'Primary'
-            elif state == 2: return 'Secondary'
-            elif state == 3: return 'Recovering'
-            elif state == 4: return 'Fatal'
-            elif state == 5: return 'Starting up (forking threads)'
-            elif state == 6: return 'Unknown'
-            elif state == 7: return 'Arbiter'
-            elif state == 8: return 'Down'
-            elif state == 9: return 'Rollback'
+            if state == 0:
+                return 'Starting Up'
+            elif state == 1:
+                return 'Primary'
+            elif state == 2:
+                return 'Secondary'
+            elif state == 3:
+                return 'Recovering'
+            elif state == 4:
+                return 'Fatal'
+            elif state == 5:
+                return 'Starting up (forking threads)'
+            elif state == 6:
+                return 'Unknown'
+            elif state == 7:
+                return 'Arbiter'
+            elif state == 8:
+                return 'Down'
+            elif state == 9:
+                return 'Rollback'
 
         status = get_state_description(state)
         hostname = get_hostname(agentConfig)
-        msg_title = "%s is %s" % (server, status)
-        msg = "MongoDB %s just reported as %s" % (server, status)
+        msg_title = "%s is %s" % (clean_server_name, status)
+        msg = "MongoDB %s just reported as %s" % (clean_server_name, status)
 
         self.event({
             'timestamp': int(time.time()),
@@ -162,52 +275,78 @@ class MongoDb(AgentCheck):
         Returns a dictionary that looks a lot like what's sent back by db.serverStatus()
         """
         if 'server' not in instance:
-            self.log.warn("Missing 'server' in mongo config")
-            return
+            raise Exception("Missing 'server' in mongo config")
 
         server = instance['server']
-        tags = instance.get('tags', [])
-        tags.append('server:%s' % server)
-        # de-dupe tags to avoid a memory leak
-        tags = list(set(tags))
 
-        try:
-            from pymongo import Connection
-        except ImportError:
-            self.log.error('mongo.yaml exists but pymongo module can not be imported. Skipping check.')
-            raise Exception('Python PyMongo Module can not be imported. Please check the installation instruction on the Datadog Website')
+        ssl_params = {
+            'ssl': instance.get('ssl', None),
+            'ssl_keyfile': instance.get('ssl_keyfile', None),
+            'ssl_certfile': instance.get('ssl_certfile', None),
+            'ssl_cert_reqs':  instance.get('ssl_cert_reqs', None),
+            'ssl_ca_certs': instance.get('ssl_ca_certs', None)
+        }
 
-        try:
-            from pymongo import uri_parser
-            # Configuration a URL, mongodb://user:pass@server/db
-            parsed = uri_parser.parse_uri(server)
-        except ImportError:
-            # uri_parser is pymongo 2.0+
-            matches = mongo_uri_re.match(server)
-            if matches:
-                parsed = matches.groupdict()
-            else:
-                parsed = {}
+        for key, param in ssl_params.items():
+            if param is None:
+                del ssl_params[key]
+
+        # Configuration a URL, mongodb://user:pass@server/db
+        parsed = pymongo.uri_parser.parse_uri(server)
         username = parsed.get('username')
         password = parsed.get('password')
         db_name = parsed.get('database')
+        clean_server_name = server.replace(password, "*" * 5) if password is not None else server
+
+        tags = instance.get('tags', [])
+        tags.append('server:%s' % clean_server_name)
+
+        # de-dupe tags to avoid a memory leak
+        tags = list(set(tags))
 
         if not db_name:
             self.log.info('No MongoDB database found in URI. Defaulting to admin.')
             db_name = 'admin'
+
+        service_check_tags = [
+            "db:%s" % db_name
+        ]
+
+        nodelist = parsed.get('nodelist')
+        if nodelist:
+            host = nodelist[0][0]
+            port = nodelist[0][1]
+            service_check_tags = service_check_tags + [
+                "host:%s" % host,
+                "port:%s" % port
+            ]
 
         do_auth = True
         if username is None or password is None:
             self.log.debug("Mongo: cannot extract username and password from config %s" % server)
             do_auth = False
 
-        conn = Connection(server, network_timeout=DEFAULT_TIMEOUT)
-        db = conn[db_name]
+        timeout = float(instance.get('timeout', DEFAULT_TIMEOUT))
+        try:
+            conn = pymongo.Connection(server, network_timeout=timeout,
+                **ssl_params)
+            db = conn[db_name]
+        except Exception:
+            self.service_check(self.SERVICE_CHECK_NAME, AgentCheck.CRITICAL, tags=service_check_tags)
+            raise
+
         if do_auth:
             if not db.authenticate(username, password):
-                self.log.error("Mongo: cannot connect with config %s" % server)
+                message = "Mongo: cannot connect with config %s" % server
+                self.service_check(self.SERVICE_CHECK_NAME, AgentCheck.CRITICAL, tags=service_check_tags, message=message)
+                raise Exception(message)
+
+        self.service_check(self.SERVICE_CHECK_NAME, AgentCheck.OK, tags=service_check_tags)
 
         status = db["$cmd"].find_one({"serverStatus": 1})
+        if status['ok'] == 0:
+            raise Exception(status['errmsg'].__str__())
+
         status['stats'] = db.command('dbstats')
 
         # Handle replica data, if any
@@ -229,19 +368,21 @@ class MongoDb(AgentCheck):
 
                 # If we have both we can compute a lag time
                 if current is not None and primary is not None:
-                    lag = current['optimeDate'] - primary['optimeDate']
+                    lag = primary['optimeDate'] - current['optimeDate']
                     # Python 2.7 has this built in, python < 2.7 don't...
-                    if hasattr(lag,'total_seconds'):
+                    if hasattr(lag, 'total_seconds'):
                         data['replicationLag'] = lag.total_seconds()
                     else:
-                        data['replicationLag'] = (lag.microseconds + \
-            (lag.seconds + lag.days * 24 * 3600) * 10**6) / 10.0**6
+                        data['replicationLag'] = (
+                            lag.microseconds +
+                            (lag.seconds + lag.days * 24 * 3600) * 10**6
+                        ) / 10.0**6
 
                 if current is not None:
                     data['health'] = current['health']
 
                 data['state'] = replSet['myState']
-                self.check_last_state(data['state'], server, self.agentConfig)
+                self.check_last_state(data['state'], clean_server_name, self.agentConfig)
                 status['replSet'] = data
         except Exception, e:
             if "OperationFailure" in repr(e) and "replSetGetStatus" in str(e):
@@ -282,14 +423,35 @@ class MongoDb(AgentCheck):
                 m = self.normalize(m.lower(), 'mongodb') + "ps"
                 self.rate(m, value, tags=tags)
 
-    @staticmethod
-    def parse_agent_config(agentConfig):
-        if not agentConfig.get('mongodb_server'):
-            return False
 
-        return {
-            'instances': [{
-                'server': agentConfig.get('mongodb_server')
-            }]
-        }
+        # Report the usage metrics for dbs/collections
+        try:
+            dbtop = db.command('top')
+            for ns, ns_metrics in dbtop['totals'].iteritems():
+                if not "." in ns:
+                    continue
 
+                # configure tags for db name and collection name
+                dbname, collname = ns.split(".", 1)
+                ns_tags = tags + ["db:%s" % dbname, "collection:%s" % collname]
+
+                # iterate over DBTOP metrics 
+                for m in DBTOP:
+                    # each metric is of the form: x.y.z with z optional
+                    # and can be found at ns_metrics[x][y][z]
+                    value = ns_metrics
+                    try:
+                        for c in m.split("."):
+                            value = value[c]
+                    except Exception:
+                        continue
+
+                    # value is now ns_metrics[x][y][z]
+                    assert type(value) in (types.IntType, types.LongType, types.FloatType)
+
+                    # prepend these metrics to namespace them
+                    m = "usage." + m
+                    m = self.normalize(m.lower(), 'mongodb')
+                    self.gauge(m, value, tags=ns_tags)
+        except Exception, e:
+            self.log.warning('Failed to record `top` metrics %s' % str(e))
