@@ -24,10 +24,10 @@ directory dd_checks_dir do
 end
 
 cookbook_file "#{dd_checks_dir}/mongo.py" do
-	source "mongo.py"
-	owner "root"
-	group "root"
-	mode 00644
-	action :create
+    source "mongo.py"
+    owner "root"
+    group "root"
+    mode 00644
+    action :create
     notifies :restart, 'service[datadog-agent]'
 end
