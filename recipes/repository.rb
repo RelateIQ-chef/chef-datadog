@@ -2,7 +2,7 @@
 # Cookbook Name:: datadog
 # Recipe:: repository
 #
-# Copyright 2013-2014, Datadog
+# Copyright 2013-2015, Datadog
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,12 @@ case node['platform_family']
 when 'debian'
   include_recipe 'apt'
 
+  package 'apt-transport-https' do
+    action :install
+  end
+
   apt_repository 'datadog' do
-    keyserver 'keyserver.ubuntu.com'
+    keyserver 'hkp://keyserver.ubuntu.com:80'
     key 'C7A7DA52'
     uri node['datadog']['aptrepo']
     distribution node['datadog']['aptrepo_dist']
@@ -30,14 +34,17 @@ when 'debian'
     action :add
   end
 
-when 'rhel'
+when 'rhel', 'fedora'
   include_recipe 'yum'
 
   yum_repository 'datadog' do
     name 'datadog'
     description 'datadog'
-    url node['datadog']['yumrepo']
-    gpgcheck false if respond_to? :gpgcheck
-    action :add
+    baseurl node['datadog']['yumrepo']
+    proxy node['datadog']['yumrepo_proxy']
+    proxy_username node['datadog']['yumrepo_proxy_username']
+    proxy_password node['datadog']['yumrepo_proxy_password']
+    gpgkey node['datadog']['yumrepo_gpgkey']
+    action :create
   end
 end
