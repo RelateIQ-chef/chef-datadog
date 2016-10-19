@@ -40,6 +40,7 @@ group 'docker' do
   action :manage
   append true
   members 'dd-agent'
+  notifies :restart, 'service[datadog-agent]', :delayed
 end
 
 datadog_monitor 'docker' do
