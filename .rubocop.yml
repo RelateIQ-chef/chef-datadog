@@ -2,8 +2,13 @@
 # Stylistic choices of this cookbook.
 
 AllCops:
-  Excludes:
-    - 'spec/**/*' # ignore spec tests for now
+  Exclude:
+    - 'vendor/**/*' # ignore non-local files
+    - Guardfile
+
+# We like longer lines
+Metrics/LineLength:
+  Max: 160
 
 # TODO: add encoding headers
 Style/Encoding:
@@ -17,9 +22,6 @@ Style/FileName:
 Style/HashSyntax:
   Enabled: false
 
-Style/LineLength:
-  Max: 160
-
 # Increase readability of large numbers after 5 digits (ports) only.
 Style/NumericLiterals:
   MinDigits: 6
@@ -29,7 +31,7 @@ Style/SignalException:
   Enabled: false
 
 # We enjoy parameters lining up for visual comprehension
-Style/SingleSpaceBeforeFirstArg:
+Style/SpaceBeforeFirstArg:
   Enabled: false
 
 # Only enforce a wordlist for 5 or longer lists.
