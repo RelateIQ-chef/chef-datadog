@@ -68,7 +68,7 @@ include_recipe 'datadog::dd-agent'
 #   ]
 
 datadog_monitor 'docker' do
-  action :disable
+  action :remove
 end
 
 docker_group = node.has_key?('docker') ? node['docker']['group'] : 'wheel'
@@ -77,6 +77,7 @@ group docker_group do
   action :manage
   append true
   members 'dd-agent'
+  notifies :restart, 'service[datadog-agent]', :delayed
 end
 
 datadog_monitor 'docker_daemon' do
