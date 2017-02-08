@@ -33,6 +33,7 @@ instances:
     <% end -%>
   <% end -%>
 
+<% if @version == 2 %>
 init_config:
   is_jmx: true
 
@@ -406,8 +407,7 @@ init_config:
           Count:
             metric_type: rate
             alias: kafka.log.flush_rate.rate
-
-<% if @version == 2 %>
+<% else %>
 init_config:
   is_jmx: true
 
