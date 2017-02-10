@@ -71,7 +71,13 @@ datadog_monitor 'docker' do
   action :remove
 end
 
-docker_group = node.has_key?('docker') ? node['docker']['group'] : 'wheel'
+docker_group = 'wheel'
+
+if node.has_key?('docker')
+  if node['docker'].has_key?('group')
+      docker_group = node['docker']['group']
+  end
+end
 
 group docker_group do
   action :manage
