@@ -1,7 +1,9 @@
 instances:
   <% @instances.each do |i| -%>
   - hostname: <%= i["hostname"] %>
+    <% unless i["nameserver"].nil? %>
     nameserver: <%= i["nameserver"] || '127.0.0.1' %>
+    <% end %>
     <% unless i["timeout"].nil? %>
     timeout: <%= i["timeout"] %>
     <% end %>
