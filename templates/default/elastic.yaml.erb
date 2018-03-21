@@ -7,6 +7,9 @@ instances:
     <% unless i["pshard_stats"].nil? %>
     pshard_stats: <%= i["pshard_stats"] %>
     <% end %>
+    <% unless i["cluster_stats"].nil? %>
+    cluster_stats: <%= i["cluster_stats"] %>
+    <% end %>
     <% unless i["is_external"].nil? %>
     is_external: <%= i["is_external"] %>
     <% end %>
@@ -18,6 +21,18 @@ instances:
     <% end %>
     <% unless i["timeout"].nil? %>
     timeout: <%= i["timeout"] %>
+    <% end %>
+    <% unless i["pending_task_stats"].nil? %>
+    pending_task_stats: <%= i["pending_task_stats"] %>
+    <% end %>
+    <% unless i["ssl_verify"].nil? %>
+    ssl_verify: <%= i["ssl_verify"] %>
+    <% end %>
+    <% unless i["ssl_cert"].nil? %>
+    ssl_cert: <%= i["ssl_cert"] %>
+    <% end %>
+    <% unless i["ssl_key"].nil? %>
+    ssl_key: <%= i["ssl_key"] %>
     <% end %>
     <% if i.key?('tags') -%>
     tags:
