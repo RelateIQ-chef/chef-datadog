@@ -10,5 +10,15 @@ platforms:
   # and http://support.ntp.org/bin/view/Support/KnownOsIssues#Section_9.2.4.2.5.3.
   # - name: ubuntu-12.04
   - name: centos-6.6
-  - name: centos-5.11
+  - name: centos-7.7
   - name: debian-7.7
+
+suites:
+- name: dd-agent-handler
+  run_list:
+    - recipe[datadog::dd-handler]
+    - recipe[datadog::dd-agent]
+  attributes:
+    datadog:
+      api_key: somenonnullapikeythats32charlong
+      application_key: alsonotnil

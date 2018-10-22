@@ -19,10 +19,18 @@ RSpec.configure do |config|
   # @see https://github.com/chef-cookbooks/yum/issues/140
   config.log_level = :error
 
+  config.file_cache_path = '/var/chef/cache'
+
   config.before do
+    # recipes/dd-agent.rb
     stub_command('rpm -q datadog-agent-base').and_return(true)
     stub_command('apt-cache policy datadog-agent-base | grep "Installed: (none)"').and_return(false)
+
+    # recipes/repository.rb
+    stub_command('rpm -q gpg-pubkey-e09422b3').and_return(false)
   end
+
+  Ohai::Config[:log_level] = :warn
 end
 
 ChefSpec::Coverage.start!

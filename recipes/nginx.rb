@@ -9,14 +9,18 @@ include_recipe 'datadog::dd-agent'
 # node['datadog']['nginx']['instances'] = [
 #   {
 #     'nginx_status_url' => "http://localhost:81/nginx_status/",
-#     'tags' => ["prod"]
+#     'tags' => ["prod"],
+#     'user' => "my_username",
+#     'password' => "my_password"
 #   },
 #   {
-#     'nginx_status_url' => "http://localhost:82/nginx_status/",
-#     'name' => ["test"]
+#     'nginx_status_url' => "https://localhost:82/nginx_status/",
+#     'name' => ['test'],
+#     'ssl_validation' => false
 #   }
 # ]
 
 datadog_monitor 'nginx' do
   instances node['datadog']['nginx']['instances']
+  logs node['datadog']['nginx']['logs']
 end
