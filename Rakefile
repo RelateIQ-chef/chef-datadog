@@ -8,13 +8,13 @@ require 'rake/clean'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 
-task :default => [
-  :style,
-  :spec
+task :default => %i[
+  style
+  spec
 ]
 
-CLEAN.include %w(.kitchen/ .yardoc/ coverage/)
-CLOBBER.include %w(doc/ Berksfile.lock Gemfile.lock)
+CLEAN.include %w[.kitchen/ .yardoc/ coverage/]
+CLOBBER.include %w[doc/ Berksfile.lock Gemfile.lock]
 
 # Style tests. Rubocop and Foodcritic
 namespace :style do
@@ -102,8 +102,8 @@ task :circle do
       # TODO: This could likely be pulled from kitchen_config.instances somehow
       name = platform.name.delete('.')
 
-      # Scope the suites to only execute against the Agent installer suites.
-      commands.push "kitchen verify dd-agent-#{name}"
+      # Execute a suite that installs the handler and the Agent.
+      commands.push "kitchen verify dd-agent-handler-#{name}"
     end
 
     commands.join(' && ')

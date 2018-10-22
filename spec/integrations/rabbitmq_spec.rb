@@ -1,11 +1,14 @@
 describe 'datadog::rabbitmq' do
   expected_yaml = <<-EOF
+    logs: ~
     init_config:
 
     instances:
       - rabbitmq_api_url: http://localhost:15672/api/
         rabbitmq_user: guest
         rabbitmq_pass: guest
+        ssl_verify: true
+        tag_families: false
         tags:
           - optional_tag1
           - optional_tag2
@@ -58,8 +61,8 @@ describe 'datadog::rabbitmq' do
   it { is_expected.to add_datadog_monitor('rabbitmq') }
 
   it 'renders expected YAML config file' do
-    expect(chef_run).to render_file('/etc/dd-agent/conf.d/rabbitmq.yaml').with_content { |content|
-      expect(YAML.load(content).to_json).to be_json_eql(YAML.load(expected_yaml).to_json)
-    }
+    expect(chef_run).to(render_file('/etc/dd-agent/conf.d/rabbitmq.yaml').with_content { |content|
+      expect(YAML.safe_load(content).to_json).to be_json_eql(YAML.safe_load(expected_yaml).to_json)
+    })
   end
 end

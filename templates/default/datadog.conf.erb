@@ -61,6 +61,32 @@ graphite_listen_port: <%= node['datadog']['graphite_port'] %>
 histogram_aggregates: <%= node['datadog']['histogram_aggregates'] %>
 histogram_percentiles: <%= node['datadog']['histogram_percentiles'] %>
 
+<% if node['datadog']['service_discovery_backend'] -%>
+# ========================================================================== #
+# Service Discovery                                                          #
+# See https://docs.datadoghq.com/guides/servicediscovery/ for details        #
+# ========================================================================== #
+
+# Service discovery allows the agent to look for running services
+# and load a configuration object for the one it recognizes.
+# This feature is disabled by default.
+# Uncomment this line to enable it (works for docker containers only for now).
+service_discovery_backend: <%= node['datadog']['service_discovery_backend'] %>
+
+# Define which key/value store must be used to look for configuration templates.
+# Default is etcd. Consul is also supported.
+sd_config_backend: <%= node['datadog']['sd_config_backend'] %>
+
+# Settings for connecting to the service discovery backend.
+sd_backend_host: <%= node['datadog']['sd_backend_host'] %>
+sd_backend_port: <%= node['datadog']['sd_backend_port'] %>
+
+# By default, the agent will look for the configuration templates under the
+# `/datadog/check_configs` key in the back-end. If you wish otherwise, uncomment this option
+# and modify its value.
+sd_template_dir: <%= node['datadog']['sd_template_dir'] %>
+<% end -%>
+
 <% if node['datadog']['dogstatsd'] -%>
 # ========================================================================== #
 # DogStatsd configuration                                                    #
@@ -99,12 +125,14 @@ use_dogstatsd: no
 
 log_level: <%= node['datadog']['log_level'] %>
 
+<% if node['datadog']['log_file_directory'] -%>
 collector_log_file: <%= node['datadog']['log_file_directory'] %>/collector.log
 forwarder_log_file: <%= node['datadog']['log_file_directory'] %>/forwarder.log
 dogstatsd_log_file: <%= node['datadog']['log_file_directory'] %>/dogstatsd.log
 jmxfetch_log_file: <%= node['datadog']['log_file_directory'] %>/jmxfetch.log
 <% unless node['platform_family'] == 'windows' -%>
 go-metro_log_file: <%= node['datadog']['log_file_directory'] %>/go-metro.log
+<% end -%>
 <% end -%>
 
 # if syslog is enabled but a host and port are not set, a local domain socket
@@ -131,7 +159,6 @@ if node['datadog']['legacy_integrations']
 -%>
 <%= description %>
 <%
-    ## Todo: add guardrails against other valid config directives
       int_hash['config'].each do |k,v|
 -%>
 <%= k %>: <%= v %>
@@ -141,3 +168,73 @@ if node['datadog']['legacy_integrations']
   end
 end
 -%>
+
+<% if node['datadog']['enable_process_agent'].is_a?(TrueClass) || node['datadog']['enable_process_agent'].is_a?(FalseClass) -%>
+process_agent_enabled: <%= node['datadog']['enable_process_agent'] %>
+<% end -%>
+
+<% if node['datadog']['enable_trace_agent'].is_a?(TrueClass) || node['datadog']['enable_trace_agent'].is_a?(FalseClass) -%>
+apm_enabled: <%= node['datadog']['enable_trace_agent'] %>
+<% end -%>
+
+<% if ! node['datadog']['extra_config'].empty? -%>
+# ========================================================================== #
+# Other config options
+# ========================================================================== #
+  <% node['datadog']['extra_config'].each do |k, v| -%>
+    <% if ! v.nil? -%>
+<%= k %>: <%= v %>
+    <% end -%>
+  <% end -%>
+<% end -%>
+
+## Trace settings
+
+[trace.config]
+<% unless node['datadog']['trace_env'].nil? -%>
+env: <%= node['datadog']['trace_env'] %>
+<% end -%>
+
+[trace.sampler]
+<% unless node['datadog']['extra_sample_rate'].nil? -%>
+extra_sample_rate: <%= node['datadog']['extra_sample_rate'] %>
+<% end -%>
+<% unless node['datadog']['max_traces_per_second'].nil? -%>
+max_traces_per_second: <%= node['datadog']['max_traces_per_second'] %>
+<% end -%>
+
+[trace.receiver]
+<% unless node['datadog']['receiver_port'].nil? -%>
+receiver_port: <%= node['datadog']['receiver_port'] %>
+<% end -%>
+<% unless node['datadog']['connection_limit'].nil? -%>
+connection_limit: <%= node['datadog']['connection_limit'] %>
+<% end -%>
+
+## Process settings
+
+[process.config]
+<% unless node['datadog']['process_agent']['blacklist'].nil? -%>
+blacklist: <%= node['datadog']['process_agent']['blacklist'] %>
+<% end -%>
+<% unless node['datadog']['process_agent']['scrub_args'].nil? -%>
+scrub_args: <%= node['datadog']['process_agent']['scrub_args'] %>
+<% end -%>
+<% unless node['datadog']['process_agent']['custom_sensitive_words'].nil? -%>
+custom_sensitive_words: <%= node['datadog']['process_agent']['custom_sensitive_words'].join(',') %>
+<% end -%>
+<% unless node['datadog']['process_agent']['process_interval'].nil? -%>
+process_interval = <%= node['datadog']['process_agent']['process_interval'] %>
+<% end -%>
+<% unless node['datadog']['process_agent']['rtprocess_interval'].nil? -%>
+rtprocess_interval = <%= node['datadog']['process_agent']['rtprocess_interval'] %>
+<% end -%>
+<% unless node['datadog']['process_agent']['container_interval'].nil? -%>
+container_interval = <%= node['datadog']['process_agent']['container_interval'] %>
+<% end -%>
+<% unless node['datadog']['process_agent']['rtcontainer_interval'].nil? -%>
+rtcontainer_interval = <%= node['datadog']['process_agent']['rtcontainer_interval'] %>
+<% end -%>
+<% unless node['datadog']['process_agent']['log_file'].nil? -%>
+log_file: <%= node['datadog']['process_agent']['log_file'] %>
+<% end -%>

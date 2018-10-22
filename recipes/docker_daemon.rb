@@ -18,8 +18,11 @@
 #
 include_recipe 'datadog::dd-agent'
 
+# The docker_daemon check no longer exists in agent version 6.x.
+# Please use the docker check instead.
+
 # Build a data structure with configuration.
-# @see https://www.datadoghq.com/2014/06/monitor-docker-datadog/
+# @see http://docs.datadoghq.com/integrations/docker/
 # @example
 #   node.override['datadog']['docker_daemon']['init_config'] = {
 #     docker_root: '/',
@@ -89,4 +92,5 @@ end
 datadog_monitor 'docker_daemon' do
   init_config node['datadog']['docker_daemon']['init_config']
   instances node['datadog']['docker_daemon']['instances']
+  logs node['datadog']['docker_daemon']['logs']
 end
