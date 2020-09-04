@@ -1,0 +1,20 @@
+false_positive: []
+mock_secret:
+- id: chef-datadog://.kitchen.yml_b69ef1407b4f3c885887799ce4c61dc672623532
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://.kitchen.yml_d4ae834656b9eaab2b457ab0d7b448e92fa4588d
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://.kitchen.yml_eeab6a88da0cff6608a4049c06630e9f519078a0
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://recipes/activemq.rb_83c32987f57ba17a3454f1ea39938813e4cc1e4a
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://recipes/elasticsearch.rb_128a9505080e99271f8a538b39e8bdca7885d810
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://recipes/haproxy.rb_83c32987f57ba17a3454f1ea39938813e4cc1e4a
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://recipes/kafka.rb_83c32987f57ba17a3454f1ea39938813e4cc1e4a
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+- id: chef-datadog://recipes/tomcat.rb_83c32987f57ba17a3454f1ea39938813e4cc1e4a
+  justification: 'Mock key or false positive identified in the latest security scan, see tracking GRC 00676414'
+non_production_secret: []
+production_secret: []
